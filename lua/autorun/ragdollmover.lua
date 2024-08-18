@@ -996,7 +996,6 @@ local RGM_CIRCLE = {
 function DrawBoneSelect(ent)
 	local mx, my = input.GetCursorPos() -- possible bug on mac https://wiki.facepunch.com/gmod/input.GetCursorPos
 
-	local maxBoneNames = GetConVar("ragdollmover_maxbonenames"):GetInt()
 	local selectedBones = 0
 	for i = 0, ent:GetBoneCount() do
 		local name = ent:GetBoneName(i)
