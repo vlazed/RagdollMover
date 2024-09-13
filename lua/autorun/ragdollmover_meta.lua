@@ -6,6 +6,7 @@
 resource.AddSingleFile("resource/localization/en/ragdollmover_tools.properties")
 resource.AddSingleFile("resource/localization/en/ragdollmover_ui.properties")
 
+TOOL_MODE = "ragdollmover"
 local MAX_EDICT_BITS = 13
 
 local TYPE_ENTITY	 = 1
@@ -128,7 +129,7 @@ numpad.Register("rgmAxisChangeStateRot", function(pl)
 	if not rgmMode[pl] then rgmMode[pl] = 1 end
 
 	if not pl:GetTool() then return end
-	if pl:GetTool().Mode ~= "ragdollmover" or pl:GetActiveWeapon():GetClass() ~= "gmod_tool" then return end
+	if pl:GetTool().Mode ~= TOOL_MODE or pl:GetActiveWeapon():GetClass() ~= "gmod_tool" then return end
 	if RotKey[pl] == ScaleKey[pl] then
 		rgmMode[pl] = rgmMode[pl] + 1
 		if rgmMode[pl] > 3 then rgmMode[pl] = 1 end
@@ -148,7 +149,7 @@ numpad.Register("rgmAxisChangeStateScale", function(pl)
 	if not RAGDOLLMOVER[pl] then RAGDOLLMOVER[pl] = {} end
 
 	if not pl:GetTool() then return end
-	if pl:GetTool().Mode ~= "ragdollmover" or pl:GetActiveWeapon():GetClass() ~= "gmod_tool" then return end
+	if pl:GetTool().Mode ~= TOOL_MODE or pl:GetActiveWeapon():GetClass() ~= "gmod_tool" then return end
 	if RotKey[pl] == ScaleKey[pl] then return end
 	RAGDOLLMOVER[pl].Scale = not RAGDOLLMOVER[pl].Scale
 	RAGDOLLMOVER[pl].Rotate = false

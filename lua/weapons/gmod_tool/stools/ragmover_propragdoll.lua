@@ -1,4 +1,14 @@
-TOOL.Name = "#tool.ragmover_propragdoll.name2"
+---@module "ragdollmover.util"
+local rgmUtil = include("ragdollmover/util.lua")
+
+local getToolPhrase = rgmUtil.getToolPhrase
+local getToolConvar = rgmUtil.getToolConvar
+
+local TOOL_MODE = TOOL:GetMode()
+
+if CLIENT then
+	TOOL.Name = getToolPhrase("name2", TOOL_MODE)
+end
 TOOL.Category = "Poser"
 TOOL.Command = nil
 TOOL.ConfigName = ""
@@ -39,7 +49,7 @@ local function rgmCanTool(ent, pl)
 	local cantool
 
 	if CPPI and ent.CPPICanTool then
-		cantool = ent:CPPICanTool(pl, "ragmover_propragdoll")
+		cantool = ent:CPPICanTool(pl, TOOL_MODE)
 	else
 		cantool = true
 	end
@@ -315,10 +325,10 @@ end
 
 local function rgmDoNotification(message)
 	if RGM_NOTIFY[message] == true then
-		notification.AddLegacy("#tool.ragmover_propragdoll.message" .. message, NOTIFY_ERROR, 5)
+		notification.AddLegacy(getToolPhrase("message", TOOL_MODE) .. message, NOTIFY_ERROR, 5)
 		surface.PlaySound("buttons/button10.wav")
 	elseif RGM_NOTIFY[message] == false then
-		notification.AddLegacy("#tool.ragmover_propragdoll.message" .. message, NOTIFY_GENERIC, 5)
+		notification.AddLegacy(getToolPhrase("message", TOOL_MODE) .. message, NOTIFY_GENERIC, 5)
 		surface.PlaySound("buttons/button14.wav")
 	end
 end
@@ -695,17 +705,17 @@ local function PropRagdollCreator(cpanel)
 	helptext:SetWrap(true)
 	helptext:SetAutoStretchVertical(true)
 	helptext:SetDark(true)
-	helptext:SetText("#tool.ragmover_propragdoll.treeinfo")
+	helptext:SetText(getToolPhrase("treeinfo", TOOL_MODE))
 	cpanel:AddItem(helptext)
 
 	local PropRagdollUI = {}
-	local constrainedents = CCol(cpanel, "#tool.ragmover_propragdoll.conents")
+	local constrainedents = CCol(cpanel, getToolPhrase("conents", TOOL_MODE))
 
 	PropRagdollUI.EntTree = vgui.Create("DTree", constrainedents)
 	PropRagdollUI.EntTree:SetTall(300)
 	constrainedents:AddItem(PropRagdollUI.EntTree)
 
-	local creatorpanel = CCol(cpanel, "#tool.ragmover_propragdoll.propragdoll")
+	local creatorpanel = CCol(cpanel, getToolPhrase("propragdoll", TOOL_MODE))
 
 	PropRagdollUI.PRTree = vgui.Create("DTree", creatorpanel)
 	PropRagdollUI.PRTree:SetTall(300)
@@ -810,12 +820,12 @@ local function PropRagdollCreator(cpanel)
 
 	PropRagdollUI.PRTree.AOffsets = {}
 
-	PropRagdollUI.PRTree.AOffsets[1] = CASlider(creatorpanel, 1, "#tool.ragdollmover.rot1")
-	PropRagdollUI.PRTree.AOffsets[2] = CASlider(creatorpanel, 2, "#tool.ragdollmover.rot2")
-	PropRagdollUI.PRTree.AOffsets[3] = CASlider(creatorpanel, 3, "#tool.ragdollmover.rot3")
+	PropRagdollUI.PRTree.AOffsets[1] = CASlider(creatorpanel, 1, getToolPhrase("rot1", TOOL_MODE))
+	PropRagdollUI.PRTree.AOffsets[2] = CASlider(creatorpanel, 2, getToolPhrase("rot2", TOOL_MODE))
+	PropRagdollUI.PRTree.AOffsets[3] = CASlider(creatorpanel, 3, getToolPhrase("rot3", TOOL_MODE))
 
 	local applybutt = vgui.Create("DButton", creatorpanel)
-	applybutt:SetText("#tool.ragmover_propragdoll.apply")
+	applybutt:SetText(getToolPhrase("apply", TOOL_MODE))
 
 	applybutt.DoClick = RGMCallApplySkeleton
 
@@ -872,11 +882,11 @@ local function AddEntity(ent, setnext)
 		local selected = PRUI.PRTree:GetSelectedItem()
 		if not IsValid(selected) then
 			AddPRNode(PRUI.PRTree, node)
-			notification.AddLegacy("#tool.ragmover_propragdoll.setroot", NOTIFY_GENERIC, 5)
+			notification.AddLegacy(getToolPhrase("setroot", TOOL_MODE), NOTIFY_GENERIC, 5)
 			surface.PlaySound("buttons/button14.wav")
 		else
 			AddPRNode(selected, node)
-			notification.AddLegacy(string.Replace(language.GetPhrase("tool.ragmover_propragdoll.attach"), "%id", selected.id), NOTIFY_GENERIC, 5)
+			notification.AddLegacy(string.Replace(getToolPhrase("attach", TOOL_MODE), "%id", selected.id), NOTIFY_GENERIC, 5)
 			surface.PlaySound("buttons/button14.wav")
 		end
 
@@ -902,7 +912,7 @@ local function AddEntity(ent, setnext)
 
 			TreeUpdateHBar()
 
-			notification.AddLegacy(language.GetPhrase("tool.ragmover_propragdoll.attach") .. " " .. selected.id, NOTIFY_GENERIC, 5)
+			notification.AddLegacy(getToolPhrase("attach", TOOL_MODE) .. " " .. selected.id, NOTIFY_GENERIC, 5)
 			surface.PlaySound("buttons/button14.wav")
 		else
 			local prnode = PRUI.PRTree.Nodes[node.id]
@@ -921,7 +931,7 @@ local function AddEntity(ent, setnext)
 
 			TreeUpdateHBar()
 
-			notification.AddLegacy("#tool.ragmover_propragdoll.setroot", NOTIFY_GENERIC, 5)
+			notification.AddLegacy(getToolPhrase("setroot", TOOL_MODE), NOTIFY_GENERIC, 5)
 			surface.PlaySound("buttons/button14.wav")
 		end
 

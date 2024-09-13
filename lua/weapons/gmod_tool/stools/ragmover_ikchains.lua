@@ -1,23 +1,35 @@
+---@module "ragdollmover.util"
+local rgmUtil = include("ragdollmover/util.lua")
 
-TOOL.Name = "#tool.ragmover_ikchains.name2"
+local getToolPhrase = rgmUtil.getToolPhrase
+local getToolConvar = rgmUtil.getToolConvar
+
+local TOOL_MODE = TOOL:GetMode()
+
+if CLIENT then
+	TOOL.Name = getToolPhrase("name2", TOOL_MODE)
+end
 TOOL.Category = "Poser"
 TOOL.Command = nil
 TOOL.ConfigName = ""
 
 TOOL.ClientConVar["type"] = 1
 
-local ikchains_iktypes = {
-	"tool.ragmover_ikchains.ik1",
-	"tool.ragmover_ikchains.ik2",
-	"tool.ragmover_ikchains.ik3",
-	"tool.ragmover_ikchains.ik4",
-	"tool.ragmover_ikchains.ik5",
-	"tool.ragmover_ikchains.ik6",
-	"tool.ragmover_ikchains.ik7",
-	"tool.ragmover_ikchains.ik8",
-	"tool.ragmover_ikchains.ik9",
-	"tool.ragmover_ikchains.ik10"
-}
+local ikchains_iktypes
+if CLIENT then
+	ikchains_iktypes = {
+	getToolPhrase("ik1", TOOL_MODE),
+	getToolPhrase("ik2", TOOL_MODE),
+	getToolPhrase("ik3", TOOL_MODE),
+	getToolPhrase("ik4", TOOL_MODE),
+	getToolPhrase("ik5", TOOL_MODE),
+	getToolPhrase("ik6", TOOL_MODE),
+	getToolPhrase("ik7", TOOL_MODE),
+	getToolPhrase("ik8", TOOL_MODE),
+	getToolPhrase("ik9", TOOL_MODE),
+	getToolPhrase("ik10", TOOL_MODE),
+	}
+end
 
 local BAD_ORDER = 0
 local SAME_BONE = 1
@@ -39,7 +51,7 @@ local function rgmCanTool(ent, pl)
 	local cantool
 
 	if CPPI and ent.CPPICanTool then
-		cantool = ent:CPPICanTool(pl, "ragmover_ikchains")
+		cantool = ent:CPPICanTool(pl, TOOL_MODE)
 	else
 		cantool = true
 	end
@@ -123,7 +135,7 @@ util.AddNetworkString("RAGDOLLMOVER_IK")
 
 local NETFUNC = {
 	function(len, pl) -- 	1 (0) - rgmikRequestSave
-		local tool = pl:GetTool("ragmover_ikchains")
+		local tool = pl:GetTool(TOOL_MODE)
 		if not tool then return end
 
 		local ent = tool.SelectedSaveEnt
@@ -190,7 +202,7 @@ local NETFUNC = {
 			end
 		end
 
-		local tool = pl:GetTool("ragmover_ikchains")
+		local tool = pl:GetTool(TOOL_MODE)
 		if not tool then return end
 
 		local ent = tool.SelectedSaveEnt
@@ -412,7 +424,7 @@ local function ChainSaver(cpanel)
 	end
 
 	main.save = vgui.Create("DButton", main)
-	main.save:SetText("#tool.ragmover_ikchains.save")
+	main.save:SetText(getToolPhrase("save", TOOL_MODE))
 	main.save.DoClick = function()
 		net.Start("RAGDOLLMOVER_IK")
 			net.WriteUInt(0, 1)
@@ -420,7 +432,7 @@ local function ChainSaver(cpanel)
 	end
 
 	main.load = vgui.Create("DButton", main)
-	main.load:SetText("#tool.ragmover_ikchains.load")
+	main.load:SetText(getToolPhrase("load", TOOL_MODE))
 	main.load.DoClick = function()
 		if not SelectedEnt then return end
 
@@ -468,7 +480,7 @@ local function ChainSaver(cpanel)
 	end
 
 	main.SetText = function(self, text)
-		self.label:SetText(language.GetPhrase("#tool.ragmover_ikchains.selectedragdoll") .. " " .. text)
+		self.label:SetText(getToolPhrase("selectedragdoll", TOOL_MODE) .. " " .. text)
 		self.label:SizeToContents()
 	end
 
@@ -494,8 +506,8 @@ local function LimbSelection(cpanel)
 		buttons[k]:SetText("#" .. v)
 
 		buttons[k].DoClick = function()
-			RunConsoleCommand("ragmover_ikchains_type", k)
-			main.text:SetText(language.GetPhrase("tool.ragmover_ikchains.ikslot") .. " " .. language.GetPhrase(ikchains_iktypes[k]))
+			RunConsoleCommand(getToolConvar("type", TOOL_MODE), k)
+			main.text:SetText(getToolPhrase("ikslot", TOOL_MODE) .. " " .. ikchains_iktypes[k])
 		end
 
 		local mceil = math.ceil
@@ -530,8 +542,8 @@ local function LimbSelection(cpanel)
 
 	main.text = vgui.Create("DLabel", cpanel)
 
-	local id = GetConVar("ragmover_ikchains_type"):GetInt() ~= 0 and GetConVar("ragmover_ikchains_type"):GetInt() or 1
-	main.text:SetText(language.GetPhrase("tool.ragmover_ikchains.ikslot") .. " " .. language.GetPhrase(ikchains_iktypes[id]))
+	local id = GetConVar(getToolConvar("type", TOOL_MODE)):GetInt() ~= 0 and GetConVar(getToolConvar("type", TOOL_MODE)):GetInt() or 1
+	main.text:SetText(getToolPhrase("ikslot", TOOL_MODE) .. " " .. ikchains_iktypes[id])
 	main.text:SetDark(true)
 	main.text:SizeToContents()
 
@@ -597,12 +609,12 @@ function TOOL:DrawHUD()
 	iktype = ((iktype == 3) or (iktype == 4)) and true or false
 
 	if CHOSEN_HIP and IsValid(CHOSEN_HIP.ent) then
-		local hipname = iktype and "#tool.ragmover_ikchains.upperarm" or "#tool.ragmover_ikchains.hip"
+		local hipname = iktype and getToolPhrase("upperarm", TOOL_MODE) or getToolPhrase("hip", TOOL_MODE)
 		rgm.DrawBoneName(CHOSEN_HIP.ent, CHOSEN_HIP.bone, hipname)
 	end
 
 	if CHOSEN_KNEE and IsValid(CHOSEN_KNEE.ent) then
-		local kneename = iktype and "#tool.ragmover_ikchains.elbow" or "#tool.ragmover_ikchains.knee"
+		local kneename = iktype and getToolPhrase("elbow", TOOL_MODE) or getToolPhrase("knee", TOOL_MODE)
 		rgm.DrawBoneName(CHOSEN_KNEE.ent, CHOSEN_KNEE.bone, kneename)
 	end
 
@@ -610,10 +622,10 @@ end
 
 local function rgmDoNotification(message)
 	if RGM_NOTIFY[message] == true then
-		notification.AddLegacy("#tool.ragmover_ikchains.message" .. message, NOTIFY_ERROR, 5)
+		notification.AddLegacy(getToolPhrase("message", TOOL_MODE) .. message, NOTIFY_ERROR, 5)
 		surface.PlaySound("buttons/button10.wav")
 	elseif RGM_NOTIFY[message] == false then
-		notification.AddLegacy("#tool.ragmover_ikchains.message" .. message, NOTIFY_GENERIC, 5)
+		notification.AddLegacy(getToolPhrase("message", TOOL_MODE) .. message, NOTIFY_GENERIC, 5)
 		surface.PlaySound("buttons/button14.wav")
 	end
 end
@@ -637,7 +649,7 @@ local NETFUNC = {
 		local ent = net.ReadEntity()
 		local bone = net.ReadUInt(10)
 		local pl = LocalPlayer()
-		local tool = pl:GetTool("ragmover_ikchains")
+		local tool = pl:GetTool(TOOL_MODE)
 		if not tool then return end
 
 		local stage = tool:GetStage()

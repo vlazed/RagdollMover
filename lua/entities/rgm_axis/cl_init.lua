@@ -1,6 +1,10 @@
+---@module "ragdollmover.util"
+local rgmUtil = include("ragdollmover/util.lua")
+local getToolConvar = rgmUtil.getToolConvar
 
 include("shared.lua")
 
+TOOL_MODE = "ragdollmover"
 local VECTOR_FRONT = RGM_Constants.VECTOR_FRONT
 local COLOR_RGMGREEN = RGM_Constants.COLOR_GREEN
 local COLOR_RGMBLACK = RGM_Constants.COLOR_BLACK
@@ -8,7 +12,8 @@ local OUTLINE_WIDTH = RGM_Constants.OUTLINE_WIDTH
 local ANGLE_ARROW_OFFSET = Angle(0, 90, 90)
 local ANGLE_DISC = Angle(0, 90, 0)
 
-local Fulldisc = GetConVar("ragdollmover_fulldisc")
+-- This is unused, so do we really need to get convar?
+local Fulldisc = GetConVar(getToolConvar("fulldisc", TOOL_MODE))
 
 local pl
 

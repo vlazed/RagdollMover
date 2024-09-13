@@ -6,6 +6,15 @@ AddCSLuaFile("ragdollmover/constants.lua")
 include("ragdollmover/rgm_gizmos.lua")
 AddCSLuaFile("ragdollmover/rgm_gizmos.lua")
 
+---@module "ragdollmover.util"
+local rgmUtil = include("ragdollmover/util.lua")
+AddCSLuaFile("ragdollmover/util.lua")
+
+local getToolPhrase = rgmUtil.getToolConvar
+local getToolConvar = rgmUtil.getToolConvar
+
+TOOL_MODE = "ragdollmover"
+
 -- create font for drawing functions that scales with screen size
 local RGMFontSize
 
@@ -1088,9 +1097,9 @@ end
 
 -- When localplayer is valid, check if we should notify the user
 hook.Add("InitPostEntity", "RagdollMoverNotifyOnStart", function()
-	if not versionMatches(RGM_VERSION, VERSION_PATH) then
-		local notice1 = language.GetPhrase("ui.ragdollmover.notice1")
-		local notice2 = language.GetPhrase("ui.ragdollmover.notice2")
+	if not versionMatches(RGM_VERSION, VERSION_PATH) and CLIENT then
+		local notice1 = getToolPhrase("notice1", TOOL_MODE)
+		local notice2 = getToolPhrase("notice2", TOOL_MODE)
 		chat.AddText(notice1)
 		chat.AddText(notice2)
 		print("\n" .. notice1 .."\n")
@@ -1099,7 +1108,7 @@ hook.Add("InitPostEntity", "RagdollMoverNotifyOnStart", function()
 end)
 
 -- Allow the user to see the changelog from GMod workshop
-concommand.Add("ragdollmover_changelog", function()
+concommand.Add(getToolConvar("changelog", TOOL_MODE), function()
 	showChangelog()
 end)
 
@@ -1375,11 +1384,11 @@ function DrawSkeleton(ent, bonenodes)
 end
 
 hook.Add("PopulateToolMenu", "RagdollMoverUtilities", function(form)
-	spawnmenu.AddToolMenuOption("Utilities", "Ragdoll Mover", "RGM_PatchNotes", "#ui.ragdollmover.notes", "", "", function(form)
+	spawnmenu.AddToolMenuOption("Utilities", "Ragdoll Mover", "RGM_PatchNotes", getToolPhrase("notes", TOOL_MODE), "", "", function(form)
 		---@cast form DForm
 
-		form:SetLabel("#ui.ragdollmover.notes")
-		form:Button("#ui.ragdollmover.notes.view", "ragdollmover_changelog")
+		form:SetLabel(getToolPhrase("notes", TOOL_MODE))
+		form:Button(getToolPhrase("notes.view", TOOL_MODE), getToolConvar("changelog", TOOL_MODE))
 	end)
 end)
 

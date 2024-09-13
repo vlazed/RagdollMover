@@ -1,8 +1,13 @@
+---@module "ragdollmover.util"
+local rgmUtil = include("ragdollmover/util.lua")
+
+local getToolConvar = rgmUtil.getToolConvar
+TOOL_MODE = "ragdollmover"
 
 hook.Add("InitPostEntity", "rgmClientSetup", function()
 
-	if ConVarExists("ragdollmover_rotatebutton") then
-		local BindRot = GetConVar("ragdollmover_rotatebutton"):GetInt()
+	if ConVarExists(getToolConvar("rotatebutton", TOOL_MODE)) then
+		local BindRot = GetConVar(getToolConvar("rotatebutton", TOOL_MODE)):GetInt()
 
 		if util.NetworkStringToID("RAGDOLLMOVER_META") ~= 0 then
 			net.Start("RAGDOLLMOVER_META")
@@ -12,8 +17,8 @@ hook.Add("InitPostEntity", "rgmClientSetup", function()
 		end
 	end
 
-	if ConVarExists("ragdollmover_scalebutton") then
-		local BindScale = GetConVar("ragdollmover_scalebutton"):GetInt()
+	if ConVarExists(getToolConvar("scalebutton", TOOL_MODE)) then
+		local BindScale = GetConVar(getToolConvar("scalebutton", TOOL_MODE)):GetInt()
 
 		if util.NetworkStringToID("RAGDOLLMOVER_META") ~= 0 then
 			net.Start("RAGDOLLMOVER_META")

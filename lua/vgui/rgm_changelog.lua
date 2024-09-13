@@ -69,7 +69,7 @@ end
 
 function PANEL:Init()
     self:MakePopup()
-    self:SetTitle("#tool.ragdollmover.name")
+    self:SetTitle(getToolPhrase("name", TOOL_MODE))
     self:SetBackgroundBlur(true)
 
     self.btnClose.Paint = function( panel, w, h ) end

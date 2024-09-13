@@ -1,5 +1,15 @@
 
-TOOL.Name = "#tool.ragdollmover.name"
+---@module "ragdollmover.util"
+local rgmUtil = include("ragdollmover/util.lua")
+
+local getToolPhrase = rgmUtil.getToolPhrase
+local getToolConvar = rgmUtil.getToolConvar
+
+local TOOL_MODE = TOOL:GetMode()
+
+if CLIENT then
+	TOOL.Name = getToolPhrase("name", TOOL_MODE)
+end
 TOOL.Category = "Poser"
 TOOL.Command = nil
 TOOL.ConfigName = ""
@@ -134,7 +144,7 @@ local function rgmCanTool(ent, pl)
 	local cantool
 
 	if CPPI and ent.CPPICanTool then
-		cantool = ent:CPPICanTool(pl, "ragdollmover")
+		cantool = ent:CPPICanTool(pl, TOOL_MODE)
 	else
 		cantool = true
 	end
@@ -980,7 +990,7 @@ local NETFUNC = {
 	function(len, pl) --				11 - rgmSelectEntity
 		local ent = net.ReadEntity()
 		local resetlists = net.ReadBool()
-		local tool = pl:GetTool("ragdollmover")
+		local tool = pl:GetTool(TOOL_MODE)
 		if not tool then return end
 
 		if not rgmCanTool(ent, pl) then return end
@@ -1211,7 +1221,7 @@ local NETFUNC = {
 
 	function(len, pl) --			14 - rgmOperationSwitch
 		local op = net.ReadUInt(2)
-		local tool = pl:GetTool("ragdollmover")
+		local tool = pl:GetTool(TOOL_MODE)
 		if not tool then return end
 
 		if op ~= 3 then
@@ -1465,7 +1475,7 @@ local NETFUNC = {
 		local plTable = RAGDOLLMOVER[pl]
 
 		if plTable.physmove ~= 1 then return end
-		local tool = pl:GetTool("ragdollmover")
+		local tool = pl:GetTool(TOOL_MODE)
 		if not tool then return end
 
 		local ent, axis = plTable.Entity, plTable.Axis
@@ -1506,7 +1516,7 @@ local NETFUNC = {
 		if not RAGDOLLMOVER[pl] then return end
 		local plTable = RAGDOLLMOVER[pl]
 		if plTable.physmove ~= 1 then return end
-		local tool = pl:GetTool("ragdollmover")
+		local tool = pl:GetTool(TOOL_MODE)
 		if not tool then return end
 		local ent = plTable.Entity
 
@@ -1561,7 +1571,7 @@ local NETFUNC = {
 			ent:ManipulateBonePosition(plTable.Bone, change)
 
 			if ent:GetClass() == "prop_ragdoll" and physmove and plTable.NextPhysBone then -- moving physical if allowed
-				local tool = pl:GetTool("ragdollmover")
+				local tool = pl:GetTool(TOOL_MODE)
 				local ang = ent:GetManipulateBoneAngles(plTable.Bone)
 
 				local pbone = plTable.NextPhysBone
@@ -1617,7 +1627,7 @@ local NETFUNC = {
 			ent:ManipulateBoneAngles(plTable.Bone, change)
 
 			if ent:GetClass() == "prop_ragdoll" and physmove and plTable.NextPhysBone then -- moving physical if allowed
-				local tool = pl:GetTool("ragdollmover")
+				local tool = pl:GetTool(TOOL_MODE)
 				local pos = ent:GetManipulateBonePosition(plTable.Bone)
 
 				local pbone = plTable.NextPhysBone
@@ -1696,7 +1706,7 @@ local NETFUNC = {
 		local var = net.ReadUInt(4)
 		if not RAGDOLLMOVER[pl] or not IsValid(RAGDOLLMOVER[pl].Axis) then return end
 		local plTable = RAGDOLLMOVER[pl]
-		local tool = pl:GetTool("ragdollmover")
+		local tool = pl:GetTool(TOOL_MODE)
 		if not tool then return end
 
 		local axis = plTable.Axis
@@ -1746,7 +1756,7 @@ end)
 
 end
 
-concommand.Add("ragdollmover_resetroot", function(pl)
+concommand.Add(getToolConvar("resetroot", TOOL_MODE), function(pl)
 	local plTable = RAGDOLLMOVER[pl]
 	if not plTable or not IsValid(plTable.Entity) then return end
 	local bone = plTable.Bone
@@ -2170,7 +2180,7 @@ function TOOL:Reload()
 		return false
 	end
 
-	RunConsoleCommand("ragdollmover_resetroot")
+	RunConsoleCommand(getToolConvar("resetroot", TOOL_MODE))
 	return false
 end
 
@@ -2478,7 +2488,7 @@ end)
 
 hook.Add("KeyPress", "rgmSwitchSelectionMode", function(pl, key)
 	local tool = pl:GetTool()
-	if RAGDOLLMOVER[pl] and IsValid(pl:GetActiveWeapon()) and  pl:GetActiveWeapon():GetClass() == "gmod_tool" and tool and tool.Mode == "ragdollmover" then
+	if RAGDOLLMOVER[pl] and IsValid(pl:GetActiveWeapon()) and  pl:GetActiveWeapon():GetClass() == "gmod_tool" and tool and tool.Mode == TOOL_MODE then
 		local op = tool:GetOperation()
 		local opset = 0
 
@@ -2498,19 +2508,19 @@ end)
 do
 
 	local ConVars = {
-		"ragdollmover_localpos", -- Axis
-		"ragdollmover_localang",
-		"ragdollmover_localoffset",
-		"ragdollmover_relativerotate",
-		"ragdollmover_scalechildren",
-		"ragdollmover_smovechildren",
-		"ragdollmover_scalerelativemove",
-		"ragdollmover_updaterate", -- RGM Table
-		"ragdollmover_unfreeze",
-		"ragdollmover_snapenable",
-		"ragdollmover_snapamount",
-		"ragdollmover_physmove",
-		"ragdollmover_always_use_pl_view"
+		getToolConvar("localpos", TOOL_MODE), -- Axis
+		getToolConvar("localang", TOOL_MODE),
+		getToolConvar("localoffset", TOOL_MODE),
+		getToolConvar("relativerotate", TOOL_MODE),
+		getToolConvar("scalechildren", TOOL_MODE),
+		getToolConvar("smovechildren", TOOL_MODE),
+		getToolConvar("scalerelativemove", TOOL_MODE),
+		getToolConvar("updaterate", TOOL_MODE), -- RGM Table
+		getToolConvar("unfreeze", TOOL_MODE),
+		getToolConvar("snapenable", TOOL_MODE),
+		getToolConvar("snapamount", TOOL_MODE),
+		getToolConvar("physmove", TOOL_MODE),
+		getToolConvar("always_use_pl_view", TOOL_MODE)
 	}
 
 	for k, v in ipairs(ConVars) do
@@ -2531,19 +2541,19 @@ end
 
 local GizmoScale, GizmoWidth, SkeletonDraw
 
-cvars.AddChangeCallback("ragdollmover_scale", function(convar, old, new)
+cvars.AddChangeCallback(getToolConvar("scale", TOOL_MODE), function(convar, old, new)
 	GizmoScale = tonumber(new)
 end)
 
-cvars.AddChangeCallback("ragdollmover_width", function(convar, old, new)
+cvars.AddChangeCallback(getToolConvar("width", TOOL_MODE), function(convar, old, new)
 	GizmoWidth = tonumber(new)
 end)
 
-cvars.AddChangeCallback("ragdollmover_drawskeleton", function(convar, old, new)
+cvars.AddChangeCallback(getToolConvar("drawskeleton", TOOL_MODE), function(convar, old, new)
 	SkeletonDraw = tonumber(new) ~= 0
 end)
 
-cvars.AddChangeCallback("ragdollmover_fulldisc", function(convar, old, new)
+cvars.AddChangeCallback(getToolConvar("fulldisc", TOOL_MODE), function(convar, old, new)
 	if not pl or not RAGDOLLMOVER[pl] or not IsValid(RAGDOLLMOVER[pl].Axis) then return end
 	RAGDOLLMOVER[pl].Axis.fulldisc = tonumber(new) ~= 0
 end)
@@ -2916,10 +2926,10 @@ local function CBinder(cpanel)
 
 	local bindrot = vgui.Create("DBinder", parent)
 	bindrot.Label = vgui.Create("DLabel", parent)
-	bindrot:SetConVar("ragdollmover_rotatebutton")
+	bindrot:SetConVar(getToolConvar("rotatebutton", TOOL_MODE))
 	bindrot:SetSize(100, 50)
 
-	bindrot.Label:SetText("#tool.ragdollmover.bindrot")
+	bindrot.Label:SetText(getToolPhrase("bindrot", TOOL_MODE))
 	bindrot.Label:SetDark(true)
 	bindrot.Label:SizeToContents()
 
@@ -2932,10 +2942,10 @@ local function CBinder(cpanel)
 
 	local bindsc = vgui.Create("DBinder", parent)
 	bindsc.Label = vgui.Create("DLabel", parent)
-	bindsc:SetConVar("ragdollmover_scalebutton")
+	bindsc:SetConVar(getToolConvar("scalebutton", TOOL_MODE))
 	bindsc:SetSize(100, 50)
 
-	bindsc.Label:SetText("#tool.ragdollmover.bindscale")
+	bindsc.Label:SetText(getToolPhrase("bindscale", TOOL_MODE))
 	bindsc.Label:SetDark(true)
 	bindsc.Label:SizeToContents()
 
@@ -2962,27 +2972,27 @@ local function CBinder(cpanel)
 end
 
 local AdditionalIKs = {
-	"ragdollmover_ik_chain_1",
-	"ragdollmover_ik_chain_2",
-	"ragdollmover_ik_chain_3",
-	"ragdollmover_ik_chain_4",
-	"ragdollmover_ik_chain_5",
-	"ragdollmover_ik_chain_6"
+	getToolConvar("ik_chain_1", TOOL_MODE),
+	getToolConvar("ik_chain_2", TOOL_MODE),
+	getToolConvar("ik_chain_3", TOOL_MODE),
+	getToolConvar("ik_chain_4", TOOL_MODE),
+	getToolConvar("ik_chain_5", TOOL_MODE),
+	getToolConvar("ik_chain_6", TOOL_MODE)
 }
 
 local function RGMSelectAllIK()
-	local ik1, ik2, ik3, ik4 = GetConVar("ragdollmover_ik_leg_L"):GetBool(), GetConVar("ragdollmover_ik_leg_R"):GetBool(), GetConVar("ragdollmover_ik_hand_L"):GetBool(), GetConVar("ragdollmover_ik_hand_R"):GetBool()
+	local ik1, ik2, ik3, ik4 = GetConVar(getToolConvar("ik_leg_L", TOOL_MODE)):GetBool(), GetConVar(getToolConvar("ik_leg_R", TOOL_MODE)):GetBool(), GetConVar(getToolConvar("ik_hand_L", TOOL_MODE)):GetBool(), GetConVar(getToolConvar("ik_hand_R", TOOL_MODE)):GetBool()
 
 	if ik1 && ik2 && ik3 && ik4 then
-		RunConsoleCommand("ragdollmover_ik_hand_L", 0)
-		RunConsoleCommand("ragdollmover_ik_hand_R", 0)
-		RunConsoleCommand("ragdollmover_ik_leg_L", 0)
-		RunConsoleCommand("ragdollmover_ik_leg_R", 0)
+		RunConsoleCommand(getToolConvar("ik_hand_L", TOOL_MODE), 0)
+		RunConsoleCommand(getToolConvar("ik_hand_R", TOOL_MODE), 0)
+		RunConsoleCommand(getToolConvar("ik_leg_L", TOOL_MODE), 0)
+		RunConsoleCommand(getToolConvar("ik_leg_R", TOOL_MODE), 0)
 	else
-		RunConsoleCommand("ragdollmover_ik_hand_L", 1)
-		RunConsoleCommand("ragdollmover_ik_hand_R", 1)
-		RunConsoleCommand("ragdollmover_ik_leg_L", 1)
-		RunConsoleCommand("ragdollmover_ik_leg_R", 1)
+		RunConsoleCommand(getToolConvar("ik_hand_L", TOOL_MODE), 1)
+		RunConsoleCommand(getToolConvar("ik_hand_R", TOOL_MODE), 1)
+		RunConsoleCommand(getToolConvar("ik_leg_L", TOOL_MODE), 1)
+		RunConsoleCommand(getToolConvar("ik_leg_R", TOOL_MODE), 1)
 	end
 end
 
@@ -2997,7 +3007,7 @@ local function CBAdditionalIKs(cpanel, text)
 
 		for i = 1, 6 do
 			panel.iks[i] = vgui.Create("DCheckBoxLabel", panel)
-			panel.iks[i]:SetText(language.GetPhrase("tool.ragdollmover.ikchain") .. " " ..i)
+			panel.iks[i]:SetText(getToolPhrase("ikchain", TOOL_MODE) .. " " ..i)
 			panel.iks[i]:SetDark(true)
 			panel.iks[i]:SetConVar(AdditionalIKs[i])
 			panel.iks[i]:SetSize(90, 15)
@@ -3183,9 +3193,9 @@ local function AddHBar(self) -- There is no horizontal scrollbars in gmod, so I 
 end
 
 local BoneTypeSort = {
-	{ Icon = "icon16/brick.png", ToolTip = "#tool.ragdollmover.physbone" },
-	{ Icon = "icon16/connect.png", ToolTip = "#tool.ragdollmover.nonphysbone" },
-	{ Icon = "icon16/error.png", ToolTip = "#tool.ragdollmover.proceduralbone" },
+	{ Icon = "icon16/brick.png", ToolTip = getToolPhrase("physbone", TOOL_MODE) },
+	{ Icon = "icon16/connect.png", ToolTip = getToolPhrase("nonphysbone", TOOL_MODE) },
+	{ Icon = "icon16/error.png", ToolTip = getToolPhrase("proceduralbone", TOOL_MODE) },
 }
 
 
@@ -3200,43 +3210,43 @@ local LockMode, LockTo = false, { id = nil, ent = nil }
 local IsPropRagdoll, TreeEntities = false, {}
 local ScaleLocks = {}
 
-cvars.AddChangeCallback("ragdollmover_ik_hand_L", function(convar, old, new)
+cvars.AddChangeCallback(getToolConvar("ik_hand_L", TOOL_MODE), function(convar, old, new)
 	if not IsValid(EnableIKButt) then return end
 
-	if tobool(new) and GetConVar("ragdollmover_ik_hand_R"):GetBool() and GetConVar("ragdollmover_ik_leg_L"):GetBool() and GetConVar("ragdollmover_ik_leg_R"):GetBool() then
-		EnableIKButt:SetText("#tool.ragdollmover.ikalloff")
+	if tobool(new) and GetConVar(getToolConvar("ik_hand_R", TOOL_MODE)):GetBool() and GetConVar(getToolConvar("ik_leg_L", TOOL_MODE)):GetBool() and GetConVar(getToolConvar("ik_leg_R", TOOL_MODE)):GetBool() then
+		EnableIKButt:SetText(getToolPhrase("ikalloff", TOOL_MODE))
 	else
-		EnableIKButt:SetText("#tool.ragdollmover.ikallon")
+		EnableIKButt:SetText(getToolPhrase("ikallon", TOOL_MODE))
 	end
 end)
 
-cvars.AddChangeCallback("ragdollmover_ik_hand_R", function(convar, old, new)
+cvars.AddChangeCallback(getToolConvar("ik_hand_R", TOOL_MODE), function(convar, old, new)
 	if not IsValid(EnableIKButt) then return end
 
-	if tobool(new) and GetConVar("ragdollmover_ik_hand_L"):GetBool() and GetConVar("ragdollmover_ik_leg_L"):GetBool() and GetConVar("ragdollmover_ik_leg_R"):GetBool() then
-		EnableIKButt:SetText("#tool.ragdollmover.ikalloff")
+	if tobool(new) and GetConVar(getToolConvar("ik_hand_L", TOOL_MODE)):GetBool() and GetConVar(getToolConvar("ik_leg_L", TOOL_MODE)):GetBool() and GetConVar(getToolConvar("ik_leg_R", TOOL_MODE)):GetBool() then
+		EnableIKButt:SetText(getToolPhrase("ikalloff", TOOL_MODE))
 	else
-		EnableIKButt:SetText("#tool.ragdollmover.ikallon")
+		EnableIKButt:SetText(getToolPhrase("ikallon", TOOL_MODE))
 	end
 end)
 
-cvars.AddChangeCallback("ragdollmover_ik_leg_L", function(convar, old, new)
+cvars.AddChangeCallback(getToolConvar("ik_leg_L", TOOL_MODE), function(convar, old, new)
 	if not IsValid(EnableIKButt) then return end
 
-	if tobool(new) and GetConVar("ragdollmover_ik_hand_R"):GetBool() and GetConVar("ragdollmover_ik_hand_L"):GetBool() and GetConVar("ragdollmover_ik_leg_R"):GetBool() then
-		EnableIKButt:SetText("#tool.ragdollmover.ikalloff")
+	if tobool(new) and GetConVar(getToolConvar("ik_hand_R", TOOL_MODE)):GetBool() and GetConVar(getToolConvar("ik_hand_L", TOOL_MODE)):GetBool() and GetConVar(getToolConvar("ik_leg_R", TOOL_MODE)):GetBool() then
+		EnableIKButt:SetText(getToolPhrase("ikalloff", TOOL_MODE))
 	else
-		EnableIKButt:SetText("#tool.ragdollmover.ikallon")
+		EnableIKButt:SetText(getToolPhrase("ikallon", TOOL_MODE))
 	end
 end)
 
-cvars.AddChangeCallback("ragdollmover_ik_leg_R", function(convar, old, new)
+cvars.AddChangeCallback(getToolConvar("ik_leg_R", TOOL_MODE), function(convar, old, new)
 	if not IsValid(EnableIKButt) then return end
 
-	if tobool(new) and GetConVar("ragdollmover_ik_hand_R"):GetBool() and GetConVar("ragdollmover_ik_leg_L"):GetBool() and GetConVar("ragdollmover_ik_hand_L"):GetBool() then
-		EnableIKButt:SetText("#tool.ragdollmover.ikalloff")
+	if tobool(new) and GetConVar(getToolConvar("ik_hand_R", TOOL_MODE)):GetBool() and GetConVar(getToolConvar("ik_leg_L", TOOL_MODE)):GetBool() and GetConVar(getToolConvar("ik_hand_L", TOOL_MODE)):GetBool() then
+		EnableIKButt:SetText(getToolPhrase("ikalloff", TOOL_MODE))
 	else
-		EnableIKButt:SetText("#tool.ragdollmover.ikallon")
+		EnableIKButt:SetText(getToolPhrase("ikallon", TOOL_MODE))
 	end
 end)
 
@@ -3265,7 +3275,7 @@ local function SetBoneNodes(bonepanel, sortedbones)
 
 			if ScaleLocks[ent][v.id] then
 				nodes[ent][v.id]:SetIcon("icon16/lightbulb.png")
-				nodes[ent][v.id].Label:SetToolTip("#tool.ragdollmover.lockedscale")
+				nodes[ent][v.id].Label:SetToolTip(getToolPhrase("lockedscale", TOOL_MODE))
 				nodes[ent][v.id].scllock = true
 			else
 				nodes[ent][v.id]:SetIcon(BoneTypeSort[v.Type].Icon)
@@ -3291,10 +3301,10 @@ local function SetBoneNodes(bonepanel, sortedbones)
 
 						if nodes[LockTo.ent][LockTo.id].poslock or nodes[LockTo.ent][LockTo.id].anglock then
 							nodes[LockTo.ent][LockTo.id]:SetIcon("icon16/lock.png")
-							nodes[LockTo.ent][LockTo.id].Label:SetToolTip("#tool.ragdollmover.lockedbone")
+							nodes[LockTo.ent][LockTo.id].Label:SetToolTip(getToolPhrase("lockedbone", TOOL_MODE))
 						elseif nodes[LockTo.ent][LockTo.id].scllock then
 							nodes[LockTo.ent][LockTo.id]:SetIcon("icon16/lightbulb.png")
-							nodes[LockTo.ent][LockTo.id].Label:SetToolTip("#tool.ragdollmover.lockedscale")
+							nodes[LockTo.ent][LockTo.id].Label:SetToolTip(getToolPhrase("lockedscale", TOOL_MODE))
 						else
 							nodes[LockTo.ent][LockTo.id]:SetIcon(BoneTypeSort[nodes[LockTo.ent][LockTo.id].Type].Icon)
 							nodes[LockTo.ent][LockTo.id].Label:SetToolTip(BoneTypeSort[nodes[LockTo.ent][LockTo.id].Type].ToolTip)
@@ -3320,9 +3330,9 @@ local function SetBoneNodes(bonepanel, sortedbones)
 
 			nodes[ent][v.id].DoRightClick = function()
 				local bonemenu = DermaMenu(false, bonepanel)
-				local resetmenu = bonemenu:AddSubMenu("#tool.ragdollmover.resetmenu")
+				local resetmenu = bonemenu:AddSubMenu(getToolPhrase("resetmenu", TOOL_MODE))
 
-				local option = resetmenu:AddOption("#tool.ragdollmover.reset", function()
+				local option = resetmenu:AddOption(getToolPhrase("reset", TOOL_MODE), function()
 					if not IsValid(ent) then return end
 					net.Start("RAGDOLLMOVER")
 						net.WriteUInt(17, 5)
@@ -3333,7 +3343,7 @@ local function SetBoneNodes(bonepanel, sortedbones)
 				end)
 				option:SetIcon("icon16/connect.png")
 
-				option = resetmenu:AddOption("#tool.ragdollmover.resetpos", function()
+				option = resetmenu:AddOption(getToolPhrase("resetpos", TOOL_MODE), function()
 					if not IsValid(ent) then return end
 					net.Start("RAGDOLLMOVER")
 						net.WriteUInt(18, 5)
@@ -3344,7 +3354,7 @@ local function SetBoneNodes(bonepanel, sortedbones)
 				end)
 				option:SetIcon("icon16/connect.png")
 
-				option = resetmenu:AddOption("#tool.ragdollmover.resetrot", function()
+				option = resetmenu:AddOption(getToolPhrase("resetrot", TOOL_MODE), function()
 					if not IsValid(ent) then return end
 					net.Start("RAGDOLLMOVER")
 						net.WriteUInt(19, 5)
@@ -3355,7 +3365,7 @@ local function SetBoneNodes(bonepanel, sortedbones)
 				end)
 				option:SetIcon("icon16/connect.png")
 
-				option = resetmenu:AddOption("#tool.ragdollmover.resetscale", function()
+				option = resetmenu:AddOption(getToolPhrase("resetscale", TOOL_MODE), function()
 					if not IsValid(ent) then return end
 					net.Start("RAGDOLLMOVER")
 						net.WriteUInt(20, 5)
@@ -3366,7 +3376,7 @@ local function SetBoneNodes(bonepanel, sortedbones)
 				end)
 				option:SetIcon("icon16/connect.png")
 
-				option = resetmenu:AddOption("#tool.ragdollmover.resetchildren", function()
+				option = resetmenu:AddOption(getToolPhrase("resetchildren", TOOL_MODE), function()
 					if not IsValid(ent) then return end
 					net.Start("RAGDOLLMOVER")
 						net.WriteUInt(17, 5)
@@ -3377,7 +3387,7 @@ local function SetBoneNodes(bonepanel, sortedbones)
 				end)
 				option:SetIcon("icon16/bricks.png")
 
-				option = resetmenu:AddOption("#tool.ragdollmover.resetposchildren", function()
+				option = resetmenu:AddOption(getToolPhrase("resetposchildren", TOOL_MODE), function()
 					if not IsValid(ent) then return end
 					net.Start("RAGDOLLMOVER")
 						net.WriteUInt(18, 5)
@@ -3388,7 +3398,7 @@ local function SetBoneNodes(bonepanel, sortedbones)
 				end)
 				option:SetIcon("icon16/bricks.png")
 
-				option = resetmenu:AddOption("#tool.ragdollmover.resetrotchildren", function()
+				option = resetmenu:AddOption(getToolPhrase("resetrotchildren", TOOL_MODE), function()
 					if not IsValid(ent) then return end
 					net.Start("RAGDOLLMOVER")
 						net.WriteUInt(19, 5)
@@ -3399,7 +3409,7 @@ local function SetBoneNodes(bonepanel, sortedbones)
 				end)
 				option:SetIcon("icon16/bricks.png")
 
-				option = resetmenu:AddOption("#tool.ragdollmover.resetscalechildren", function()
+				option = resetmenu:AddOption(getToolPhrase("resetscalechildren", TOOL_MODE), function()
 					if not IsValid(ent) then return end
 					net.Start("RAGDOLLMOVER")
 						net.WriteUInt(20, 5)
@@ -3410,9 +3420,9 @@ local function SetBoneNodes(bonepanel, sortedbones)
 				end)
 				option:SetIcon("icon16/bricks.png")
 
-				local scalezeromenu = bonemenu:AddSubMenu("#tool.ragdollmover.scalezero")
+				local scalezeromenu = bonemenu:AddSubMenu(getToolPhrase("scalezero", TOOL_MODE))
 
-				option = scalezeromenu:AddOption("#tool.ragdollmover.bone", function()
+				option = scalezeromenu:AddOption(getToolPhrase("bone", TOOL_MODE), function()
 					if not IsValid(ent) then return end
 					net.Start("RAGDOLLMOVER")
 						net.WriteUInt(21, 5)
@@ -3423,7 +3433,7 @@ local function SetBoneNodes(bonepanel, sortedbones)
 				end)
 				option:SetIcon("icon16/connect.png")
 
-				option = scalezeromenu:AddOption("#tool.ragdollmover.bonechildren", function()
+				option = scalezeromenu:AddOption(getToolPhrase("bonechildren", TOOL_MODE), function()
 					if not IsValid(ent) then return end
 					net.Start("RAGDOLLMOVER")
 						net.WriteUInt(21, 5)
@@ -3438,7 +3448,7 @@ local function SetBoneNodes(bonepanel, sortedbones)
 
 				if nodes[ent][v.id].bonelock then
 
-					option = bonemenu:AddOption("#tool.ragdollmover.unlockbone", function()
+					option = bonemenu:AddOption(getToolPhrase("unlockbone", TOOL_MODE), function()
 						if not IsValid(ent) then return end
 						net.Start("RAGDOLLMOVER")
 							net.WriteUInt(8, 5)
@@ -3450,7 +3460,7 @@ local function SetBoneNodes(bonepanel, sortedbones)
 					bonemenu:AddSpacer()
 				elseif nodes[ent][v.id].Type == BONE_PHYSICAL and IsValid(ent) and ( ent:GetClass() == "prop_ragdoll" or IsPropRagdoll ) then
 
-					option = bonemenu:AddOption(nodes[ent][v.id].poslock and "#tool.ragdollmover.unlockpos" or "#tool.ragdollmover.lockpos", function()
+					option = bonemenu:AddOption(nodes[ent][v.id].poslock and getToolPhrase("unlockpos", TOOL_MODE) or getToolPhrase("lockpos", TOOL_MODE), function()
 						if not IsValid(ent) then return end
 						net.Start("RAGDOLLMOVER")
 							net.WriteUInt(5, 5)
@@ -3461,7 +3471,7 @@ local function SetBoneNodes(bonepanel, sortedbones)
 					end)
 					option:SetIcon(nodes[ent][v.id].poslock and "icon16/lock.png" or "icon16/brick.png")
 
-					option = bonemenu:AddOption(nodes[ent][v.id].anglock and "#tool.ragdollmover.unlockang" or "#tool.ragdollmover.lockang", function()
+					option = bonemenu:AddOption(nodes[ent][v.id].anglock and getToolPhrase("unlockang", TOOL_MODE) or getToolPhrase("lockang", TOOL_MODE), function()
 						if not IsValid(ent) then return end
 						net.Start("RAGDOLLMOVER")
 							net.WriteUInt(5, 5)
@@ -3472,7 +3482,7 @@ local function SetBoneNodes(bonepanel, sortedbones)
 					end)
 					option:SetIcon(nodes[ent][v.id].anglock and "icon16/lock.png" or "icon16/brick.png")
 
-					option = bonemenu:AddOption("#tool.ragdollmover.lockbone", function()
+					option = bonemenu:AddOption(getToolPhrase("lockbone", TOOL_MODE), function()
 						if not IsValid(ent) then return end
 
 						if LockMode == 1 then
@@ -3488,14 +3498,14 @@ local function SetBoneNodes(bonepanel, sortedbones)
 
 						surface.PlaySound("buttons/button9.wav")
 						nodes[ent][v.id]:SetIcon("icon16/brick_add.png")
-						nodes[ent][v.id].Label:SetToolTip("#tool.ragdollmover.bonetolock")
+						nodes[ent][v.id].Label:SetToolTip(getToolPhrase("bonetolock", TOOL_MODE))
 					end)
 					option:SetIcon("icon16/lock.png")
 
 					bonemenu:AddSpacer()
 				end
 
-				option = bonemenu:AddOption(nodes[ent][v.id].scllock and "#tool.ragdollmover.unlockscale" or "#tool.ragdollmover.lockscale", function()
+				option = bonemenu:AddOption(nodes[ent][v.id].scllock and getToolPhrase("unlockscale", TOOL_MODE) or getToolPhrase("lockscale", TOOL_MODE), function()
 						if not IsValid(ent) then return end
 						net.Start("RAGDOLLMOVER")
 							net.WriteUInt(5, 5)
@@ -3507,7 +3517,7 @@ local function SetBoneNodes(bonepanel, sortedbones)
 				option:SetIcon(nodes[ent][v.id].scllock and "icon16/lightbulb.png" or "icon16/connect.png")
 
 				if nodes[ent][v.id].Type == BONE_PHYSICAL and IsValid(ent) and ( ent:GetClass() == "prop_ragdoll" or IsPropRagdoll ) then
-					option = bonemenu:AddOption("#tool.ragdollmover.freezebone", function()
+					option = bonemenu:AddOption(getToolPhrase("freezebone", TOOL_MODE), function()
 						if not IsValid(ent) then return end
 
 						net.Start("RAGDOLLMOVER")
@@ -3519,7 +3529,7 @@ local function SetBoneNodes(bonepanel, sortedbones)
 					option:SetIcon("icon16/transmit_blue.png")
 				end
 
-				bonemenu:AddOption("#tool.ragdollmover.putgizmopos", function()
+				bonemenu:AddOption(getToolPhrase("putgizmopos", TOOL_MODE), function()
 					if not IsValid(ent) then return end
 
 					local bone = v.id
@@ -3864,7 +3874,7 @@ local function RGMBuildConstrainedEnts(parent, children, entpanel)
 
 					surface.PlaySound("buttons/button9.wav")
 					conentnodes[ent]:SetIcon("icon16/brick_edit.png")
-					conentnodes[ent].Label:SetToolTip("#tool.ragdollmover.entlock")
+					conentnodes[ent].Label:SetToolTip(getToolPhrase("entlock", TOOL_MODE))
 				end
 			end
 		end
@@ -3872,7 +3882,7 @@ local function RGMBuildConstrainedEnts(parent, children, entpanel)
 		conentnodes[ent].DoRightClick = function()
 			local entmenu = DermaMenu(false, entpanel)
 
-			local option = entmenu:AddOption("#tool.ragdollmover.entselect", function()
+			local option = entmenu:AddOption(getToolPhrase("entselect", TOOL_MODE), function()
 				if not IsValid(ent) then return end
 				net.Start("RAGDOLLMOVER")
 					net.WriteUInt(11, 5)
@@ -3904,7 +3914,7 @@ local function RGMMakeBoneButtonPanel(cat, cpanel)
 	parentpanel.ShowAll = vgui.Create("DButton", parentpanel)
 	parentpanel.ShowAll:Dock(FILL)
 	parentpanel.ShowAll:SetZPos(0)
-	parentpanel.ShowAll:SetText("#tool.ragdollmover.listshowall")
+	parentpanel.ShowAll:SetText(getToolPhrase("listshowall", TOOL_MODE))
 	parentpanel.ShowAll.DoClick = function()
 		local ent = plTable.Entity
 		if not IsValid(ent) or not IsValid(BonePanel) then return end
@@ -3914,7 +3924,7 @@ local function RGMMakeBoneButtonPanel(cat, cpanel)
 	parentpanel.ShowPhys = vgui.Create("DButton", parentpanel)
 	parentpanel.ShowPhys:Dock(LEFT)
 	parentpanel.ShowPhys:SetZPos(1)
-	parentpanel.ShowPhys:SetText("#tool.ragdollmover.listshowphys")
+	parentpanel.ShowPhys:SetText(getToolPhrase("listshowphys", TOOL_MODE))
 	parentpanel.ShowPhys.DoClick = function()
 		local ent = plTable.Entity
 		if not IsValid(ent) or not IsValid(BonePanel) then return end
@@ -3924,7 +3934,7 @@ local function RGMMakeBoneButtonPanel(cat, cpanel)
 	parentpanel.ShowNonphys = vgui.Create("DButton", parentpanel)
 	parentpanel.ShowNonphys:Dock(RIGHT)
 	parentpanel.ShowNonphys:SetZPos(1)
-	parentpanel.ShowNonphys:SetText("#tool.ragdollmover.listshownonphys")
+	parentpanel.ShowNonphys:SetText(getToolPhrase("listshownonphys", TOOL_MODE))
 	parentpanel.ShowNonphys.DoClick = function()
 		local ent = plTable.Entity
 		if not IsValid(ent) or not IsValid(BonePanel) then return end
@@ -3936,64 +3946,64 @@ end
 
 local function rgmDoNotification(message)
 	if RGM_NOTIFY[message] == true then
-		notification.AddLegacy("#tool.ragdollmover.message" .. message, NOTIFY_ERROR, 5)
+		notification.AddLegacy(getToolPhrase("message", TOOL_MODE) .. message, NOTIFY_ERROR, 5)
 		surface.PlaySound("buttons/button10.wav")
 	elseif RGM_NOTIFY[message] == false then
-		notification.AddLegacy("#tool.ragdollmover.message" .. message, NOTIFY_GENERIC, 5)
+		notification.AddLegacy(getToolPhrase("message", TOOL_MODE) .. message, NOTIFY_GENERIC, 5)
 		surface.PlaySound("buttons/button14.wav")
 	end
 end
 
 function TOOL.BuildCPanel(CPanel)
 
-	local Col1 = CCol(CPanel, "#tool.ragdollmover.gizmopanel")
-		CCheckBox(Col1, "#tool.ragdollmover.localpos", "ragdollmover_localpos")
-		CCheckBox(Col1, "#tool.ragdollmover.localang", "ragdollmover_localang")
-		CNumSlider(Col1, "#tool.ragdollmover.scale", "ragdollmover_scale", 1.0, 50.0, 2)
-		CNumSlider(Col1, "#tool.ragdollmover.width", "ragdollmover_width", 0.1, 1.0, 2)
-		CCheckBox(Col1, "#tool.ragdollmover.fulldisc", "ragdollmover_fulldisc")
+	local Col1 = CCol(CPanel, getToolPhrase("gizmopanel", TOOL_MODE))
+		CCheckBox(Col1, getToolPhrase("localpos", TOOL_MODE), getToolConvar("localpos", TOOL_MODE))
+		CCheckBox(Col1, getToolPhrase("localang", TOOL_MODE), getToolConvar("localang", TOOL_MODE))
+		CNumSlider(Col1, getToolPhrase("scale", TOOL_MODE), getToolConvar("scale", TOOL_MODE), 1.0, 50.0, 2)
+		CNumSlider(Col1, getToolPhrase("width", TOOL_MODE), getToolConvar("width", TOOL_MODE), 0.1, 1.0, 2)
+		CCheckBox(Col1, getToolPhrase("fulldisc", TOOL_MODE), getToolConvar("fulldisc", TOOL_MODE))
 
-		local GizmoOffset = CCol(Col1, "#tool.ragdollmover.gizmooffsetpanel", true)
-		CCheckBox(GizmoOffset, "#tool.ragdollmover.gizmolocaloffset", "ragdollmover_localoffset")
-		CCheckBox(GizmoOffset, "#tool.ragdollmover.gizmorelativerotate", "ragdollmover_relativerotate")
-		Gizmo1 = CGizmoSlider(GizmoOffset, "#tool.ragdollmover.xoffset", 1, -300, 300, 2)
-		Gizmo2 = CGizmoSlider(GizmoOffset, "#tool.ragdollmover.yoffset", 2, -300, 300, 2)
-		Gizmo3 = CGizmoSlider(GizmoOffset, "#tool.ragdollmover.zoffset", 3, -300, 300, 2)
-		CButton(GizmoOffset, "#tool.ragdollmover.resetoffset", RGMResetGizmo)
-		CButton(GizmoOffset, "#tool.ragdollmover.setoffset", RGMGizmoMode)
+		local GizmoOffset = CCol(Col1, getToolPhrase("gizmooffsetpanel", TOOL_MODE), true)
+		CCheckBox(GizmoOffset, getToolPhrase("gizmolocaloffset", TOOL_MODE), getToolConvar("localoffset", TOOL_MODE))
+		CCheckBox(GizmoOffset, getToolPhrase("gizmorelativerotate", TOOL_MODE), getToolConvar("relativerotate", TOOL_MODE))
+		Gizmo1 = CGizmoSlider(GizmoOffset, getToolPhrase("xoffset", TOOL_MODE), 1, -300, 300, 2)
+		Gizmo2 = CGizmoSlider(GizmoOffset, getToolPhrase("yoffset", TOOL_MODE), 2, -300, 300, 2)
+		Gizmo3 = CGizmoSlider(GizmoOffset, getToolPhrase("zoffset", TOOL_MODE), 3, -300, 300, 2)
+		CButton(GizmoOffset, getToolPhrase("resetoffset", TOOL_MODE), RGMResetGizmo)
+		CButton(GizmoOffset, getToolPhrase("setoffset", TOOL_MODE), RGMGizmoMode)
 
-	local Col2 = CCol(CPanel, "#tool.ragdollmover.ikpanel")
-		CCheckBox(Col2, "#tool.ragdollmover.ik3", "ragdollmover_ik_hand_L")
-		CCheckBox(Col2, "#tool.ragdollmover.ik4", "ragdollmover_ik_hand_R")
-		CCheckBox(Col2, "#tool.ragdollmover.ik1", "ragdollmover_ik_leg_L")
-		CCheckBox(Col2, "#tool.ragdollmover.ik2", "ragdollmover_ik_leg_R")
-		EnableIKButt = CButton(Col2, "#tool.ragdollmover.ikallon", RGMSelectAllIK)
-		if GetConVar("ragdollmover_ik_leg_L"):GetBool() and GetConVar("ragdollmover_ik_leg_R"):GetBool() and GetConVar("ragdollmover_ik_hand_L"):GetBool() and GetConVar("ragdollmover_ik_hand_R"):GetBool() then
-			EnableIKButt:SetText("#tool.ragdollmover.ikalloff")
+	local Col2 = CCol(CPanel, getToolPhrase("ikpanel", TOOL_MODE))
+		CCheckBox(Col2, getToolPhrase("ik3", TOOL_MODE), getToolConvar("ik_hand_L", TOOL_MODE))
+		CCheckBox(Col2, getToolPhrase("ik4", TOOL_MODE), getToolConvar("ik_hand_R", TOOL_MODE))
+		CCheckBox(Col2, getToolPhrase("ik1", TOOL_MODE), getToolConvar("ik_leg_L", TOOL_MODE))
+		CCheckBox(Col2, getToolPhrase("ik2", TOOL_MODE), getToolConvar("ik_leg_R", TOOL_MODE))
+		EnableIKButt = CButton(Col2, getToolPhrase("ikallon", TOOL_MODE), RGMSelectAllIK)
+		if GetConVar(getToolConvar("ik_leg_L", TOOL_MODE)):GetBool() and GetConVar(getToolConvar("ik_leg_R", TOOL_MODE)):GetBool() and GetConVar(getToolConvar("ik_hand_L", TOOL_MODE)):GetBool() and GetConVar(getToolConvar("ik_hand_R", TOOL_MODE)):GetBool() then
+			EnableIKButt:SetText(getToolPhrase("ikalloff", TOOL_MODE))
 		end
-		CBAdditionalIKs(Col2, "#tool.ragdollmover.additional")
+		CBAdditionalIKs(Col2, getToolPhrase("additional", TOOL_MODE))
 
-	local Col3 = CCol(CPanel, "#tool.ragdollmover.miscpanel")
-		CCheckBox(Col3, "#tool.ragdollmover.lockselected", "ragdollmover_lockselected")
-		local CB = CCheckBox(Col3, "#tool.ragdollmover.unfreeze", "ragdollmover_unfreeze")
-		CB:SetToolTip("#tool.ragdollmover.unfreezetip")
-		local DisFil = CCheckBox(Col3, "#tool.ragdollmover.disablefilter", "ragdollmover_disablefilter")
-		DisFil:SetToolTip("#tool.ragdollmover.disablefiltertip")
-		CCheckBox(Col3, "#tool.ragdollmover.drawskeleton", "ragdollmover_drawskeleton")
-		CCheckBox(Col3, "#tool.ragdollmover.snapenable", "ragdollmover_snapenable")
-		CNumSlider(Col3, "#tool.ragdollmover.snapamount", "ragdollmover_snapamount", 1, 180, 0)
-		CNumSlider(Col3, "#tool.ragdollmover.updaterate", "ragdollmover_updaterate", 0.01, 1.0, 2)
+	local Col3 = CCol(CPanel, getToolPhrase("miscpanel", TOOL_MODE))
+		CCheckBox(Col3, getToolPhrase("lockselected", TOOL_MODE), getToolConvar("lockselected", TOOL_MODE))
+		local CB = CCheckBox(Col3, getToolPhrase("unfreeze", TOOL_MODE), getToolConvar("unfreeze", TOOL_MODE))
+		CB:SetToolTip(getToolPhrase("unfreezetip", TOOL_MODE))
+		local DisFil = CCheckBox(Col3, getToolPhrase("disablefilter", TOOL_MODE), getToolConvar("disablefilter", TOOL_MODE))
+		DisFil:SetToolTip(getToolPhrase("disablefiltertip", TOOL_MODE))
+		CCheckBox(Col3, getToolPhrase("drawskeleton", TOOL_MODE), getToolConvar("drawskeleton", TOOL_MODE))
+		CCheckBox(Col3, getToolPhrase("snapenable", TOOL_MODE), getToolConvar("snapenable", TOOL_MODE))
+		CNumSlider(Col3, getToolPhrase("snapamount", TOOL_MODE), getToolConvar("snapamount", TOOL_MODE), 1, 180, 0)
+		CNumSlider(Col3, getToolPhrase("updaterate", TOOL_MODE), getToolConvar("updaterate", TOOL_MODE), 0.01, 1.0, 2)
 
 	CBinder(CPanel)
 
-	Col4 = CCol(CPanel, "#tool.ragdollmover.bonemanpanel")
+	Col4 = CCol(CPanel, getToolPhrase("bonemanpanel", TOOL_MODE))
 
-		local ColManip = CCol(Col4, "#tool.ragdollmover.bonemanip", true)
+		local ColManip = CCol(Col4, getToolPhrase("bonemanip", TOOL_MODE), true)
 			-- Position
 			Entry1 = CManipEntry(ColManip, 1)
-			Pos1 = CManipSlider(ColManip, "#tool.ragdollmover.pos1", 1, 1, -300, 300, 2, Entry1) --x
-			Pos2 = CManipSlider(ColManip, "#tool.ragdollmover.pos2", 1, 2, -300, 300, 2, Entry1) --y
-			Pos3 = CManipSlider(ColManip, "#tool.ragdollmover.pos3", 1, 3, -300, 300, 2, Entry1) --z
+			Pos1 = CManipSlider(ColManip, getToolPhrase("pos1", TOOL_MODE), 1, 1, -300, 300, 2, Entry1) --x
+			Pos2 = CManipSlider(ColManip, getToolPhrase("pos2", TOOL_MODE), 1, 2, -300, 300, 2, Entry1) --y
+			Pos3 = CManipSlider(ColManip, getToolPhrase("pos3", TOOL_MODE), 1, 3, -300, 300, 2, Entry1) --z
 			Entry1:SetVisible(false)
 			Pos1:SetVisible(false)
 			Pos2:SetVisible(false)
@@ -4001,9 +4011,9 @@ function TOOL.BuildCPanel(CPanel)
 			Entry1.Sliders = {Pos1, Pos2, Pos3}
 			-- Angles
 			Entry2 = CManipEntry(ColManip, 2)
-			Rot1 = CManipSlider(ColManip, "#tool.ragdollmover.rot1", 2, 1, -180, 180, 2, Entry2) --pitch
-			Rot2 = CManipSlider(ColManip, "#tool.ragdollmover.rot2", 2, 2, -180, 180, 2, Entry2) --yaw
-			Rot3 = CManipSlider(ColManip, "#tool.ragdollmover.rot3", 2, 3, -180, 180, 2, Entry2) --roll
+			Rot1 = CManipSlider(ColManip, getToolPhrase("rot1", TOOL_MODE), 2, 1, -180, 180, 2, Entry2) --pitch
+			Rot2 = CManipSlider(ColManip, getToolPhrase("rot2", TOOL_MODE), 2, 2, -180, 180, 2, Entry2) --yaw
+			Rot3 = CManipSlider(ColManip, getToolPhrase("rot3", TOOL_MODE), 2, 3, -180, 180, 2, Entry2) --roll
 			Entry2:SetVisible(false)
 			Rot1:SetVisible(false)
 			Rot2:SetVisible(false)
@@ -4011,21 +4021,21 @@ function TOOL.BuildCPanel(CPanel)
 			Entry2.Sliders = {Rot1, Rot2, Rot3}
 			--Scale
 			Entry3 = CManipEntry(ColManip, 3)
-			Scale1 = CManipSlider(ColManip, "#tool.ragdollmover.scale1", 3, 1, -100, 100, 2, Entry3) --x
-			Scale2 = CManipSlider(ColManip, "#tool.ragdollmover.scale2", 3, 2, -100, 100, 2, Entry3) --y
-			Scale3 = CManipSlider(ColManip, "#tool.ragdollmover.scale3", 3, 3, -100, 100, 2, Entry3) --z
+			Scale1 = CManipSlider(ColManip, getToolPhrase("scale1", TOOL_MODE), 3, 1, -100, 100, 2, Entry3) --x
+			Scale2 = CManipSlider(ColManip, getToolPhrase("scale2", TOOL_MODE), 3, 2, -100, 100, 2, Entry3) --y
+			Scale3 = CManipSlider(ColManip, getToolPhrase("scale3", TOOL_MODE), 3, 3, -100, 100, 2, Entry3) --z
 			Entry3.Sliders = {Scale1, Scale2, Scale3}
 
-			CButton(ColManip, "#tool.ragdollmover.resetallbones", RGMResetAllBones)
+			CButton(ColManip, getToolPhrase("resetallbones", TOOL_MODE), RGMResetAllBones)
 
-		local Col5 = CCol(Col4, "#tool.ragdollmover.scaleoptions", true) 
-		CCheckBox(Col5, "#tool.ragdollmover.scalechildren", "ragdollmover_scalechildren")
-		CCheckBox(Col5, "#tool.ragdollmover.smovechildren", "ragdollmover_smovechildren")
-		local physmovecheck = CCheckBox(Col5, "#tool.ragdollmover.physmove", "ragdollmover_physmove")
-		physmovecheck:SetToolTip("#tool.ragdollmover.physmovetip")
-		CCheckBox(Col5, "#tool.ragdollmover.scalerelativemove", "ragdollmover_scalerelativemove")
+		local Col5 = CCol(Col4, getToolPhrase("scaleoptions", TOOL_MODE), true) 
+		CCheckBox(Col5, getToolPhrase("scalechildren", TOOL_MODE), getToolConvar("scalechildren", TOOL_MODE))
+		CCheckBox(Col5, getToolPhrase("smovechildren", TOOL_MODE), getToolConvar("smovechildren", TOOL_MODE))
+		local physmovecheck = CCheckBox(Col5, getToolPhrase("physmove", TOOL_MODE), getToolConvar("physmove", TOOL_MODE))
+		physmovecheck:SetToolTip(getToolPhrase("physmovetip", TOOL_MODE))
+		CCheckBox(Col5, getToolPhrase("scalerelativemove", TOOL_MODE), getToolConvar("scalerelativemove", TOOL_MODE))
 
-		local ColBones = CCol(Col4, "#tool.ragdollmover.bonelist")
+		local ColBones = CCol(Col4, getToolPhrase("bonelist", TOOL_MODE))
 			RGMMakeBoneButtonPanel(ColBones, CPanel)
 			BonePanel = vgui.Create("DTree", ColBones)
 			BonePanel:SetTall(600)
@@ -4033,7 +4043,7 @@ function TOOL.BuildCPanel(CPanel)
 			ColBones:AddItem(BonePanel)
 			ColBones:AddItem(BonePanel.HBar)
 
-	local ColEnts = CCol(CPanel, "#tool.ragdollmover.entchildren")
+	local ColEnts = CCol(CPanel, getToolPhrase("entchildren", TOOL_MODE))
 
 		EntPanel = vgui.Create("DTree", ColEnts)
 		EntPanel:SetTall(150)
@@ -4042,7 +4052,7 @@ function TOOL.BuildCPanel(CPanel)
 		ColEnts:AddItem(EntPanel)
 		ColEnts:AddItem(EntPanel.HBar)
 	
-	local ColConsEnts = CCol(CPanel, "#tool.ragdollmover.conents")
+	local ColConsEnts = CCol(CPanel, getToolPhrase("conents", TOOL_MODE))
 
 		ConEntPanel = vgui.Create("DTree", ColConsEnts)
 		ConEntPanel:SetTall(150)
@@ -4050,7 +4060,7 @@ function TOOL.BuildCPanel(CPanel)
 		local ConstrainedHelp = vgui.Create("DLabel", ColConsEnts)
 		ConstrainedHelp:SetWrap(true)
 		ConstrainedHelp:SetAutoStretchVertical(true)
-		ConstrainedHelp:SetText("#tool.ragdollmover.conentshelp")
+		ConstrainedHelp:SetText(getToolPhrase("conentshelp", TOOL_MODE))
 		ConstrainedHelp:SetDark(true)
 		ColConsEnts:AddItem(ConstrainedHelp)
 
@@ -4096,7 +4106,7 @@ local NETFUNC = {
 		ScaleLocks = {}
 
 		local tool = pl:GetTool()
-		if RAGDOLLMOVER[pl] and IsValid(pl:GetActiveWeapon()) and  pl:GetActiveWeapon():GetClass() == "gmod_tool" and tool and tool.Mode == "ragdollmover" then
+		if RAGDOLLMOVER[pl] and IsValid(pl:GetActiveWeapon()) and  pl:GetActiveWeapon():GetClass() == "gmod_tool" and tool and tool.Mode == TOOL_MODE then
 
 			net.Start("RAGDOLLMOVER")
 				net.WriteUInt(14, 5)
@@ -4168,7 +4178,7 @@ local NETFUNC = {
 		end
 
 		local tool = pl:GetTool()
-		if RAGDOLLMOVER[pl] and IsValid(pl:GetActiveWeapon()) and  pl:GetActiveWeapon():GetClass() == "gmod_tool" and tool and tool.Mode == "ragdollmover" then
+		if RAGDOLLMOVER[pl] and IsValid(pl:GetActiveWeapon()) and  pl:GetActiveWeapon():GetClass() == "gmod_tool" and tool and tool.Mode == TOOL_MODE then
 
 			net.Start("RAGDOLLMOVER")
 				net.WriteUInt(14, 5)
@@ -4215,7 +4225,7 @@ local NETFUNC = {
 		end
 
 		local tool = pl:GetTool()
-		if RAGDOLLMOVER[pl] and IsValid(pl:GetActiveWeapon()) and  pl:GetActiveWeapon():GetClass() == "gmod_tool" and tool and tool.Mode == "ragdollmover" then
+		if RAGDOLLMOVER[pl] and IsValid(pl:GetActiveWeapon()) and  pl:GetActiveWeapon():GetClass() == "gmod_tool" and tool and tool.Mode == TOOL_MODE then
 
 			net.Start("RAGDOLLMOVER")
 				net.WriteUInt(14, 5)
@@ -4246,19 +4256,19 @@ local NETFUNC = {
 
 					if LockMode == 1 and bone == LockTo.id and ent == LockTo.ent then
 						nodes[ent][bone]:SetIcon("icon16/brick_add.png")
-						nodes[ent][bone].Label:SetToolTip("#tool.ragdollmover.bonetolock")
+						nodes[ent][bone].Label:SetToolTip(getToolPhrase("bonetolock", TOOL_MODE))
 					elseif bonelock then
 						nodes[ent][bone]:SetIcon("icon16/lock_go.png")
-						nodes[ent][bone].Label:SetToolTip("#tool.ragdollmover.lockedbonetobone")
+						nodes[ent][bone].Label:SetToolTip(getToolPhrase("lockedbonetobone", TOOL_MODE))
 					elseif anglock or poslock then
 						nodes[ent][bone]:SetIcon("icon16/lock.png")
-						nodes[ent][bone].Label:SetToolTip("#tool.ragdollmover.lockedbone")
+						nodes[ent][bone].Label:SetToolTip(getToolPhrase("lockedbone", TOOL_MODE))
 					elseif ScaleLocks[ent][bone] then
 						nodes[ent][bone]:SetIcon("icon16/lightbulb.png")
-						nodes[ent][bone].Label:SetToolTip("#tool.ragdollmover.lockedscale")
+						nodes[ent][bone].Label:SetToolTip(getToolPhrase("lockedscale", TOOL_MODE))
 					else
 						nodes[ent][bone]:SetIcon("icon16/brick.png")
-						nodes[ent][bone].Label:SetToolTip("#tool.ragdollmover.physbone")
+						nodes[ent][bone].Label:SetToolTip(getToolPhrase("physbone", TOOL_MODE))
 					end
 				end
 			end
@@ -4278,7 +4288,7 @@ local NETFUNC = {
 				if nodes[ent][bone] then
 					nodes[ent][bone].Type = BONE_PARENTED
 					nodes[ent][bone]:SetIcon("icon16/stop.png")
-					nodes[ent][bone].Label:SetToolTip("#tool.ragdollmover.parentedbone")
+					nodes[ent][bone].Label:SetToolTip(getToolPhrase("parentedbone", TOOL_MODE))
 				end
 			end
 		end
@@ -4298,10 +4308,10 @@ local NETFUNC = {
 
 		if poslock or anglock then
 			nodes[ent][boneid]:SetIcon("icon16/lock.png")
-			nodes[ent][boneid].Label:SetToolTip("#tool.ragdollmover.lockedbone")
+			nodes[ent][boneid].Label:SetToolTip(getToolPhrase("lockedbone", TOOL_MODE))
 		elseif scllock then
 			nodes[ent][boneid]:SetIcon("icon16/lightbulb.png")
-			nodes[ent][boneid].Label:SetToolTip("#tool.ragdollmover.lockedscale")
+			nodes[ent][boneid].Label:SetToolTip(getToolPhrase("lockedscale", TOOL_MODE))
 		else
 			nodes[ent][boneid]:SetIcon(BoneTypeSort[nodes[ent][boneid].Type].Icon)
 			nodes[ent][boneid].Label:SetToolTip(BoneTypeSort[nodes[ent][boneid].Type].ToolTip)
@@ -4317,7 +4327,7 @@ local NETFUNC = {
 			nodes[ent][lockbone].poslock = false
 			nodes[ent][lockbone].anglock = false
 			nodes[ent][lockbone]:SetIcon("icon16/lock_go.png")
-			nodes[ent][lockbone].Label:SetToolTip("#tool.ragdollmover.lockedbonetobone")
+			nodes[ent][lockbone].Label:SetToolTip(getToolPhrase("lockedbonetobone", TOOL_MODE))
 
 			rgmDoNotification(BONELOCK_SUCCESS)
 		end
@@ -4330,7 +4340,7 @@ local NETFUNC = {
 		if nodes[ent][unlockbone] then
 			nodes[ent][unlockbone].bonelock = false
 			nodes[ent][unlockbone]:SetIcon("icon16/brick.png")
-			nodes[ent][unlockbone].Label:SetToolTip("#tool.ragdollmover.physbone")
+			nodes[ent][unlockbone].Label:SetToolTip(getToolPhrase("physbone", TOOL_MODE))
 		end
 	end,
 

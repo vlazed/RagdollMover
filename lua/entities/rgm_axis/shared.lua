@@ -1,3 +1,8 @@
+---@module "ragdollmover.util"
+local rgmUtil = include("ragdollmover/util.lua")
+local getToolConvar = rgmUtil.getToolConvar
+
+TOOL_MODE = "ragdollmover"
 
 ENT.Type = "anim"
 ENT.Base = "base_entity"
@@ -5,7 +10,7 @@ ENT.Base = "base_entity"
 function ENT:Initialize()
 	if CLIENT then
 		self:SetNoDraw(true)
-		self.fulldisc = GetConVar("ragdollmover_fulldisc"):GetInt() ~= 0 -- last time i used GetBool, it was breaking for 64 bit branch
+		self.fulldisc = GetConVar(getToolConvar("fulldisc", TOOL_MODE)):GetInt() ~= 0 -- last time i used GetBool, it was breaking for 64 bit branch
 	end
 	self:DrawShadow(false)
 	self:SetCollisionBounds(Vector(-0.1, -0.1, -0.1), Vector(0.1, 0.1, 0.1))
