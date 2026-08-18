@@ -75,17 +75,20 @@ end
 
 local VECTOR_ONE = RGM_Constants.VECTOR_ONE
 
-function GetEyePos(pl)
+function GetEyePos(pl, viewent)
+	local inViewEnt = pl ~= viewent
 	if SERVER then 
 		local viewTable = RAGDOLLMOVER_VIEWS[pl]
 		local inThirdPerson = viewTable and viewTable[#viewTable]
-		local inViewEnt = pl ~= pl:GetViewEntity()
 		return 
 			not inViewEnt and inThirdPerson and viewTable[1] or pl:EyePos(),
 			not inViewEnt and inThirdPerson and viewTable[2] or pl:EyeAngles(),
 			viewTable[3]
 	else
-		return MainEyePos(), MainEyeAngles(), vgui.CursorVisible()
+		return
+			not inViewEnt and MainEyePos() or pl:EyePos(), 
+			not inViewEnt and MainEyeAngles() or pl:EyeAngles(), 
+			vgui.CursorVisible()
 	end
 end
 
