@@ -965,13 +965,8 @@ do
 			local pl = LocalPlayer()
 			local parent = self.Parent
 			local toscreen = {}
-			local linetable = self:GetLinePositions()
-			local eyepos = pl:EyePos()
-
-			local viewent = pl:GetViewEntity()
-			if IsValid(viewent) and viewent ~= pl then
-				eyepos = viewent:GetPos()
-			end
+			local linetable = self:GetLinePositions()			
+			local eyepos = rgm.EyePosAng(pl, pl:GetViewEntity())
 
 			local largedisc = parent.DiscLarge
 			if not largedisc then return end
@@ -990,9 +985,11 @@ do
 			end
 
 			for _, point in ipairs(toscreen) do
-				minDist = math.min(minDist, eyepos:Distance(point))
-				maxDist = math.max(maxDist, eyepos:Distance(point))
+				minDist = math.min(minDist, eyepos:DistToSqr(point))
+				maxDist = math.max(maxDist, eyepos:DistToSqr(point))
 			end
+			minDist = math.sqrt(minDist) -- TODO: move square root operation to shader?
+			maxDist = math.sqrt(maxDist)
 
 			local mat = parent.fulldisc and discMaterial or discMaterialPartial
 			sendVertexMetadata(minDist, maxDist, 0)
